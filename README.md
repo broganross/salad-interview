@@ -74,4 +74,4 @@ Configuration is managed with the following environment variables
 ## Notes
 
 1. The problem says the float64 fields have a size of 4 bytes.  This obviously doesn't work, but the example does contain enough bytes.
-1. Resolving the name 'data.salad.com' fails.  An nslookup makes it seem like it's an example.  Therefore I made a simple TCP server which just gives a valid response.  It can be run using: ```go run ./cmd/server/main.go```
+1. Resolving the name 'data.salad.com' fails.  An nslookup makes it seem like it's an example.  Therefore I made a simple TCP server which just gives a valid response.  It can be run using: ```go run ./cmd/server/main.go```.  Then set the SALAD_MESSAGEROUTER_URL environment variable to `127.0.0.1:5000`.

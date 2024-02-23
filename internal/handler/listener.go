@@ -64,20 +64,21 @@ func (l *Listener) makeConnection() (net.Conn, error) {
 			retryCount--
 			log.Debug().Dur("sleep", sleep).Int("retryCount", retryCount).Msg("retrying connection")
 		} else {
+			if l.Timeout.Microseconds() > 0 {
+				// TODO: If it's important for the listener to really just wait for a message,
+				// we would remove this functionality
+				if err := conn.SetDeadline(time.Now().Add(l.Timeout)); err != nil {
+					return conn, err
+				}
+			}
 			break
-		}
-	}
-	// TODO: If it's important for the listener to really just wait for a message,
-	// we would remove this functionality
-	if conn != nil && l.Timeout.Microseconds() > 0 {
-		if err := conn.SetDeadline(time.Now().Add(l.Timeout)); err != nil {
-			return conn, err
 		}
 	}
 	return conn, err
 }
 
 // AddHandler adds the given handler to the list which will run on a message
+// If we know message headers, we could make a handler associated to specific a header.
 func (l *Listener) AddHandler(h Handler) error {
 	// This could probably use some validation
 	l.handlers = append(l.handlers, h)
@@ -94,9 +95,6 @@ func (l *Listener) Listen() error {
 			// TODO: Determine how we actually want to handle this.
 			returnErr = err
 			break
-			// or
-			// time.Sleep(1 * time.Second)
-			// continue
 		} else if err != nil {
 			// TODO: Do we really want to just keep trying infinitely?
 			time.Sleep(1 * time.Second)

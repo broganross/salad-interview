@@ -3,6 +3,7 @@ package handler_test
 import (
 	"bytes"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/broganross/salad-interview/internal/handler"
@@ -34,6 +35,19 @@ func TestPlaneStatus_ReadConnection(t *testing.T) {
 			true,
 			nil,
 		},
+		{
+			"cannot-read",
+			[]byte{},
+			false,
+			io.EOF,
+		},
+		{
+			"cannot-unmarshal",
+			[]byte{0x32, 0x32, 0x32},
+			false,
+			message.ErrInvalidMessageHeader,
+		},
+		// might be worth adding tests to make sure Seek is called under the right conditions
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
