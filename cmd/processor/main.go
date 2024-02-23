@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/broganross/salad-interview/internal/config"
-	"github.com/broganross/salad-interview/internal/listener"
+	"github.com/broganross/salad-interview/internal/domain"
+	"github.com/broganross/salad-interview/internal/handler"
+	"github.com/broganross/salad-interview/internal/handler/middleware"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -27,18 +30,28 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	listener := listener.New(ctx, &conf)
-	if err := listener.Start(); err != nil {
-		log.Error().Err(err).Msg("starting up listener")
-		os.Exit(2)
+	// build the listener, and handlers
+	listener := handler.NewListener(ctx, &conf)
+	logHandler := middleware.Log{}
+	listener.AddHandler(&logHandler)
+	domain := domain.Example{}
+	handler := handler.PlaneStatusHandler{
+		Domain: &domain,
 	}
+	listener.AddHandler(&handler)
 
-	select {
-	// case <- neverReady:
-	// 	fmt.Println("ready")
-	case <-ctx.Done():
-		log.Info().Msg("context canceled")
-		stop()
-	}
+	// start listening for messages from the server
+	go func() {
+		if err := listener.Listen(); err != nil {
+			if errors.Is(err, context.Canceled) {
+				return
+			}
+			log.Error().Err(err).Msg("listening")
+			os.Exit(2)
+		}
+	}()
+
+	<-ctx.Done()
+	stop()
 	log.Info().Msg("shutting down")
 }
