@@ -70,6 +70,21 @@ Configuration is managed with the following environment variables
 
     go run ./cmd/processor/main.go
 
+## Get Started
+
+For just checking out the functionality first start up the server:
+
+    go run ./cmd/server/main.go
+
+Then set your server URL and run the processor:
+
+    # linux
+    SALAD_MESSAGEROUTER_URL=127.0.0.1:5000 go run ./cmd/processor/main.go
+
+    # powershell
+    $env:SALAD_MESSAGEROUTER_URL="127.0.0.1:5000"; go run ./cmd/processor/main.go
+
+
 
 ## Notes
 
